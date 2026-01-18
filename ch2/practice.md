@@ -80,16 +80,16 @@ f: `010010100`101011001000101000001`00`
 
 ### 2.9.
 
-|  R  |  G  |  B  |  Color  |
-| :-: | :-: | :-: | :-----: |
-|  0  |  0  |  0  |  Black  |
-|  0  |  0  |  1  |  Blue   |
-|  0  |  1  |  0  |  Green  |
-|  0  |  1  |  1  |  Cyan   |
-|  1  |  0  |  0  |   Red   |
-|  1  |  0  |  1  | Magenta |
-|  1  |  1  |  0  | Yellow  |
-|  1  |  1  |  1  |  White  |
+|   R   |   G   |   B   |  Color  |
+| :---: | :---: | :---: | :-----: |
+|   0   |   0   |   0   |  Black  |
+|   0   |   0   |   1   |  Blue   |
+|   0   |   1   |   0   |  Green  |
+|   0   |   1   |   1   |  Cyan   |
+|   1   |   0   |   0   |   Red   |
+|   1   |   0   |   1   | Magenta |
+|   1   |   1   |   0   | Yellow  |
+|   1   |   1   |   1   |  White  |
 
 A.
 Black(000) <-> White(111)
@@ -98,6 +98,87 @@ Green(010) <-> Magenta(101)
 Cyan(011) <-> Red(100)
 
 B.
-Blue | Green = 001 | 010 = 011 = Cyan
-Yellow & Cyan = 110 & 011 = 010 = Green
-Red & Magenta = 100 ^ 101 = 001 = Blue
+Blue | Green = 001 | 010 = 011 = `Cyan`
+Yellow & Cyan = 110 & 011 = 010 = `Green`
+Red & Magenta = 100 ^ 101 = 001 = `Blue`
+
+### 2.10
+
+|   Step    |  *x   |  *y   |
+| :-------: | :---: | :---: |
+| Initially |   a   |   b   |
+|  Step 1   |  `a`  | `a^b` |
+|  Step 2   |  `b`  | `a^b` |
+|  Step 3   |  `b`  |  `a`  |
+
+### 2.11
+
+A.
+midIdx - (0 + cnt - 1) / 2
+first - `a[mid]`
+last - `a[mid]`
+
+B.
+Because the first and last values refer to the same index, the two values are identical, and therefore `a ^ a = 0`.
+
+C.
+
+Just change the condition in the for loop to from `first <= last` `first < last` .
+
+### 2.12
+
+A.
+
+`x & 0xFF`
+
+B.
+
+`x ^ ~0xFF`
+
+C.
+
+`x | 0xFF`
+
+
+### 2.13
+
+```c
+int bool_or(int x, int y){
+  int result = bis(x, y);
+  return result
+}
+
+int bool_xor(int x, int y){
+  int result = bis(bic(x, y), bic(y, x));
+  return result
+}
+```
+
+`bic` is the same with `x & ~m`. xor results 1 when only one of the inputs is 1, so `(x & ~y)` | `(y & ~x)` can achieve the same effect. That's why we use `bis` to combine the two `bic` results.
+
+### 2.14
+
+x = 0x66, 0110.0110
+y = 0x39, 0011.1001
+~x = 1001.1001
+~y = 1100.0110
+
+
+| Expression | Value  | Expression | Value  |
+| :--------: | :----: | :--------: | :----: |
+|    x&y     | `0x20` |   x && y   | `0x01` |
+|   x \| y   | `0x7F` |  x \|\| y  | `0x01` |
+|  ~x \| ~y  | `0xDF` | !x \|\| !y | `0x00` |
+|   x & !y   | `0x00` |  x && ~y   | `0x01` |
+
+### 2.15
+
+`!(x^y)`
+
+### 2.16
+| a (Hex) | a (Binary)  | a << 3 (Binary) | a << 3 (Hex) | Logical a >> 2 (Binary) | Logical a >> 2 (Hex) | Arithmetic a >> 2 (Binary) | Arithmetic a >> 2 (Hex) |
+| :-----: | :---------: | :-------------: | :----------: | :---------------------: | :------------------: | :------------------------: | :---------------------: |
+|  0xC3   | `1100.0011` |   `0001.1000`   |    `0x18`    |       `0011.0000`       |        `0x30`        |        `1111.0000`         |         `0xF0`          |
+|  0x75   | `0111.0101` |   `1010.1000`   |    `0xA8`    |       `0001.1101`       |        `0x1D`        |        `0001.1101`         |         `0x1D`          |
+|  0x87   | `1000.0111` |   `0011.1000`   |    `0x38`    |       `0010.0001`       |        `0x21`        |        `1110.0001`         |         `0xE1`          |
+|  0x66   | `0110.0110` |   `0011.0000`   |    `0x30`    |       `0001.1001`       |        `0x19`        |        `0001.1001`         |         `0x19`          |
