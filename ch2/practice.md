@@ -227,3 +227,122 @@ I. -0x48 = `-72`
 |  -1   | `-1 + 16 = 15` |
 |   0   |      `0`       |
 |   5   |      `5`       |
+
+### 2.21
+
+|          Expression          |    Type    | Evaluation |          hex           |
+| :--------------------------: | :--------: | :--------: | :--------------------: |
+| -2147483647-1 == 2147483648U | `unsigned` |    `1`     | 0x80000000, 0x80000000 |
+|  -2147483647-1 < 2147483647  |  `signed`  |    `1`     | 0x80000000, 0x7FFFFFFF |
+| -2147483647-1U < 2147483647  | `unsigned` |    `0`     | 0x80000000, 0x7FFFFFFF |
+| -2147483647-1 < -2147483647  |  `signed`  |    `1`     | 0x80000000, 0x80000001 |
+| -2147483647-1U < -2147483647 | `unsigned` |    `1`     | 0x80000000, 0x80000001 |
+
+
+-2147483647 - 1 = 0x80000001 - 0xFFFFFFFF = 0x80000000
+-2147483647 - 1U =  0x80000001 - 0x00000001 = 0x80000000
+
+### 2.22
+
+A. [1011]
+
+B2T_4([1011]) = -x_{3}*2^{3} + x_{2}*2^{2} + x_{1}*2^{1} + x_{0}*2^{0} =  -8 + 2 + 1 = -5
+
+B. [11011]
+
+B2T_5([11011]) = -x_{4}*2^{4} + x_{3}*2^{3} + x_{2}*2^{2} + x_{1}*2^{1} + x_{0}*2^{0} =  -16 + 8 + 2 + 1 = -5
+
+B. [111011]
+
+B2T_6([111011]) = -32 + 16 + 8 + 2 + 1 = -5
+
+### 2.23
+
+```c
+int func1(unsigned word) {
+  return (int) ((word << 24) >>24);
+}
+
+int func2(unsigned word) {
+  return ((int) word << 24) >> 24;
+}
+```
+
+- 32bit program, two's complement
+- signed -> arithmetically right shift
+- unsigned -> logical right shift
+
+A. 
+
+|     w      |   fun1(w)    |   fun2(w)    |
+| :--------: | :----------: | :----------: |
+| 0x00000076 | `0x00000076` | `0x00000076` |
+| 0x87654321 | `0x00000021` | `0x00000021` |
+| 0x000000C9 | `0x000000C9` | `0xFFFFFFC9` |
+| 0xEDCBA987 | `0x00000087` | `0xFFFFFF87` |
+
+B.
+
+`func1` is useful when you only want to get the last byte.
+`func2` is useful when you want to get the value of the last byte(it contains a sign bit).
+
+### 2.24
+
+| Hex (Original) | Hex (Truncated) | Unsigned (Original) | Unsigned (Truncated) | Two’s complement (Original) | Two’s complement (Truncated) |
+| :------------: | :-------------: | :-----------------: | :------------------: | :-------------------------: | :--------------------------: |
+|   0([0000])    |    0([000])     |          0          |         `0`          |              0              |             `0`              |
+|   2([0010])    |    2([010])     |          2          |         `2`          |              2              |             `2`              |
+|   9([1001])    |    1([001])     |          9          |         `1`          |             -7              |             `1`              |
+|   B([1011])    |    3([011])     |         11          |         `3`          |             -5              |             `3`              |
+|   F([1111])    |    7([111])     |         15          |         `7`          |             -1              |             `-1`             |
+
+Equation 2.9 means that just do `mod 2^k`, so it's ok to use its unsgined value as is.
+Equation 2.10 means that do `mod 2^k`, and consider MSB as a sign bit. 
+
+### 2.25
+
+```c
+float sum_elements(float a[], unsigned length) {
+  int i;
+  float result = 0;
+
+  for(i = 0; i <= length - 1; i++)
+    result += a[i]
+  return result;
+}
+```
+
+When run with argument length of 0, this code causes a memory error. First of all,`length - 1` is casted to `(unsigned)(int)`, resulting in 0xFFFFFFFF(4,294,967,295) in a 32-bit program. Then `i` exceeds the bounds of the array a, leading to an out-of-bounds memory access.
+
+### 2.26
+
+```c
+int strlonger(char *s, char *t) {
+  return strlen(s) - strlen(t) > 0;
+}
+```
+
+A.
+It occurs when `s` is longer than `t`, that is, when `strlen(s) - strlen(t)` evaluates to a negative value.
+
+B.
+
+Since `size_t` is `unsigned`, the result of `strlen(s) - strlen(t)` is also `unsigned`. As a result,the MSB represents only a value weight rather than a sign bit. When the computed value is negative, the MSB is set to 1, making the value greater than 0. This is the root cause of the probelm.
+
+C.
+
+It is enough to change the expression `strlen(s) - strlen(t) > 0` to `strlen(s) > strlen(t)`
+
+### 2.27
+
+### 2.28
+
+### 2.29
+
+### 2.30
+
+### 2.31
+
+### 2.32
+
+### 2.33
