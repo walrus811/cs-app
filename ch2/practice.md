@@ -335,14 +335,290 @@ It is enough to change the expression `strlen(s) - strlen(t) > 0` to `strlen(s) 
 
 ### 2.27
 
+```c
+int uadd_ok(unsigned x, unsigned y) {
+  unsigned s = x + y;
+
+  return s < x;
+}
+```
+
 ### 2.28
+
+| x (Hex) | x (Decimal) | additive inverse (Decimal) | additive inverse (Hex) |
+| :-----: | :---------: | :------------------------: | :--------------------: |
+|    0    |     `0`     |            `0`             |         `0x0`          |
+|    5    |     `5`     |            `11`            |         `0xB`          |
+|    8    |     `8`     |            `8`             |         `0x8`          |
+|    D    |    `13`     |            `3`             |         `0x3`          |
+|    F    |    `15`     |            `1`             |         `0x1`          |
+
 
 ### 2.29
 
+|    x    |    y    |  x + y   | x + y(Two's) |   Case   |
+| :-----: | :-----: | :------: | :----------: | :------: |
+|  `-12`  |  `-15`  |  `-27`   |     `3`      | `Case 1` |
+| [10100] | [10001] | [100101] |   [00101]    |          |
+|  `-8`   |  `-8`   |  `-16`   |    `-16`     | `Case 2` |
+| [11000] | [11000] | [110000] |   [10000]    |          |
+|  `-9`   |   `8`   |   `-1`   |     `-1`     | `Case 2` |
+| [10111] | [01000] | [11111]  |   [11111]    |          |
+|   `2`   |   `3`   |   `5`    |     `5`      | `Case 3` |
+| [00010] | [00101] | [00111]  |   [00111]    |          |
+|  `12`   |   `4`   |   `16`   |     `-1`     | `Case 4` |
+| [01100] | [00100] | [10000]  |   [10000]    |          |
+
 ### 2.30
+
+```c
+int tadd_ok(int x, int y) {
+  int s = x + y;
+
+  if(x > 0 && y > 0 && s < 0)
+    return 0;
+
+  if(x < 0 && y < 0 && s > 0)
+    return 0;
+
+  return 1;
+}
+```
 
 ### 2.31
 
+```c
+/* buggy */
+int tadd_ok(int x, int y) {
+  int sum = x + y;
+  return (sum-x == y) && (sum-y == x);
+}
+```
+
+Two's complement is only a way to interpret a fixed-width bit vector. The machines always perform fixed-width addition modulo 2^w. Therefore, at the bit level, addition is always reversible, and the expression `(x+y) - x = y` holds regardless of wrap-around. As a result, `tadd_ok` always returns 1 and cannot detect overflow.
+
 ### 2.32
 
+```c
+int tsub_ok(int x, int y) {
+  return tadd_ok(x, -y);
+}
+```
+
+The bug occurs when x is 0 and y is `T_MIN_w`. The function must return 0(overflow). In Two's complement represiontation, `x` satisfies −2^(w−1) ≤ x ≤ 2^(w−1) − 1, so `x-y` is `2^(w-1)`, which is overflow.
+However, The negation of `T_Min_w` yields the same bit vector, so `tadd_ok`' computes the sum as `T_Min_w` and incorrectly returns 1.
+
 ### 2.33
+
+| x (Hex) | x (Decimal) | additive inverse (Decimal) | additive inverse (Hex) |
+| :-----: | :---------: | :------------------------: | :--------------------: |
+|    0    |     `0`     |            `0`             |          `0`           |
+|    5    |     `5`     |            `-5`            |       `B(1011)`        |
+|    8    |    `-8`     |            `8`             |       `8(1000)`        |
+|    D    |    `-3`     |            `3`             |       `3(0011)`        |
+|    F    |    `-1`     |            `1`             |       `1(0001)`        |
+
+The resulting bit patterns in the two cases are the same, because under Two's complement representation, `T_MIN_w`'s addtivie inverse is itself.
+
+
+### 2.34
+
+|       Mode       |    x     |    y     |     x · y     | Truncated x · y |
+| :--------------: | :------: | :------: | :-----------: | :-------------: |
+|     Unsigned     | 4 [100]  | 5 [101]  | `20 [010100]` |    `4 [100]`    |
+|     Unsigned     | 2 [010]  | 7 [111]  | `14 [001110]` |   `-2 [110]`    |
+| Two’s complement | 2 [010]  | -1 [111] | `-2 [111110]` |    `6 [110]`    |
+|     Unsigned     | 6 [110]  | 6 [110]  | `36 [100100]` |    `4 [100]`    |
+| Two’s complement | -2 [110] | -2 [110] | `4 [000100]`  |   `-4 [100]`    |
+
+
+### 2.35
+
+```c
+int tmult_ok(int x, int y){
+  int p = x * y;
+  return !x || p/x  == y; 
+}
+```
+
+1.
+
+`x*y` is 2w-bit two's complment number and we apply `mod 2^w` to it, so divide `x*y` into two parts, `u` denote the unsigned number represented by the lower `w` bits, and `v` denote the two's complement number represented by the upper `w` bits. we can get `x*y = v*2^w + u` by Equation 2.3.
+By Equation 2.6, we can write `u = p + p_{w-1}*2^w`. `x*y = v*2^w + p + p_{w-1}*2^w = p + (v + p_{w-1}) * 2^w.` Anyway, `2^w` will be removed, so let  `t = v + p_{w-1}`. Now we have `x*y = p + t*2^w`.
+When `t=0`, we have `x*y = p`; the multiplication does not overflow. When `t!=0`, we have `x*y != p`; the multiplication overflows.
+
+2.
+
+By definition of integer devision, `p = x * q + r`, where `|r| < |x|`
+
+3.
+
+Suppose `q = y`. Then we have `x * y = x * y + r + t*2^w`. With `r=t=0`, `x * y = x * q`.5
+
+Addition and subtraction modulo 2^w from Abelian Group, making overfow undetectable. In contrast, multiplication modulo 2^w is not reversible: overflow discards the upper bits `v`, and division by `y` cannot recover the original result.
+
+
+### 2.36
+
+```c
+int tmult_ok(int x, int y){
+  int64_t p = (int64_t)x*y;
+  return p == (int) p;
+}
+```
+
+Since `int64_t` is large enough to hold the product `x * y`, the multiplication itself never overflows.
+However, the value may not be representable as an `int`, so we compare `p` with `(int)p`.
+
+### 2.37
+
+```c
+void* copy_elements(void *ele_src[], int ele_cnt, size_t ele_size) {
+  uint64_t asize = ele_cnt * (uint64_t) ele_size;
+  void *result = malloc(aisze);
+  if(result == NULL)
+    return NULL;
+  void *next = result;
+  int i;
+  for(i = 0; i < ele_cnt; i++) {
+    memcpy(next, ele_src[i], ele_size);
+    next += ele_size;
+  }
+  return result;
+}
+```
+
+A. No, `malloc` takes a `size_t` as its argument. There's no overflow when evaluating `asize`, but `malloc` is still executed even when the vale exceeds `SIZE_MAX`.
+
+B.
+
+I'd rather insert code as follows between lines 2 and 3.
+
+```c
+if(asize != size_t(asize))
+  return NULL;
+```
+
+It prevents the function from the overflow problem.
+
+### 2.38
+
+In `(a << k) + b`, where k is one of `0`, `1`, `2`, or `3` and b is either `0` or `a`, the possible cases are as follows:
+
+a << 0 -> `a`
+a << 0 + a -> `2a`
+a << 1 -> `2a`
+a << 1 + a -> `3a`
+a << 2 -> `4a`
+a << 2 + a -> `5a`
+a << 3 -> `8a`
+a << 3 + a -> `9a`
+
+A single LEA instruction can be used to compute `a`, `2a`, `3a`, `4a`, `5a`, `8a`, and `9a`.
+
+### 2.39
+
+If `n` is the MSB, `(x << (n+1))` overflows, so Form B reduces to `-(x << m)`
+
+### 2.40
+
+|   K   | Shifts | Add/Subs |        Expression        |
+| :---: | :----: | :------: | :----------------------: |
+|   6   |   2    |    1     |    `x << 2 + x << 1`     |
+|  31   |   1    |    1     |       `x << 5 - x`       |
+|  -6   |   2    |    1     |    `x << 1 - x << 3`     |
+|  55   |   2    |    2     | `(x << 6 - x << 3 ) + x` |
+
+
+### 2.41
+
+A compiler should choose the form with fewer operations. The ruls is to choose form A when `n = m`, either form when `n = m + 1`, and form B when `n > m + 1`.
+Assume that `m > 0` at first. When `n = m`, form A requires only a signle shift, while form B requires two shifts and a subtraction. When `n = m+1`, both forms require two shifts and either an addition or a subtraction. When `n > m + 1`, form B requires only two shifts and on subtraction, while form A requires `n - m + 1 > 2` shifts and `n - m > 1` additions. For the case of `m = 0`, we get one fewer shift for both forms A and B, and so the same rules apply for choosing between the two.
+
+### 2.42
+
+```c
+int div16(int x){
+  // If x is negative, (x >> 31) is 0xFFFFFFFF.
+  // after aplying `&0xF` to bias, the bias becomes 0x0000000F.
+  // If x is positive, (x >> 31) is 0, so bias is 0. 
+  int bias = (x >> 31) & 0xF;
+  return (x + bias) >> 4;
+}
+```
+
+### 2.43
+
+```c
+#define M /* Mystery numer 1 */
+#define N /* Mystery numer 2 */
+int arith(int x, int y) {
+  int result = 0;
+  result = x * M + y / N;
+  return result;
+}
+```
+
+```c
+int optarith(int x, int y) {
+  int t = x;
+  x <<= 5;
+  x -= t;
+  if(y < 0) y += 7;
+  y >>= 3;
+  return x + y;
+}
+```
+
+`M` is `31`, because `x * M` changed to `(x << 5) - x`, and it is `31x`.
+`N` is `8`, when `y` is positive, it shifts 3 bits to the right. when negative, it add bias, [111].
+
+### 2.44
+
+```c
+int x = foo();
+int y = bar();
+
+unsigned ux = x;
+unsigned uy = y;
+```
+
+A. (x > 0) || (x - 1 < 0)
+
+`false`. 
+`-2^31 -1` is `0x7FFFFFFF`.
+
+B. (x & 7) != 7 || (x << 29 < 0)
+
+`true`.
+1) When `(x & 7) != 7` is true, the expression evaluates to `true`.
+2) When `(x & 7) != 7` is false, the lowest three bits of `x` are [111], so `x<<29` must be negative. As a result, the expression evaluates to `true`.
+
+C. (x * x) >= 0
+
+`false`.
+When x is `65,535(0xFFFF)`, `x*x` is `-131,071(0xFFFE0001)`.
+
+D. x < 0 || -x <= 0
+
+`true`
+
+1) When `x < 0` is true, the expression evaluates to `true`.
+2) When `x < 0` is false, x is 0 or positive. `-0` is the same with `0`, and the bits of positive numbers starts with `0`. When negate, its MSB is always '1', so `-x <= 0` is `true`. the expression evaluates to `true`. 
+
+E. x > 0 || -x >= 0
+
+`false`
+
+1) When `x > 0` is true, the expression evaluates to `true`.
+2) When `x > 0` is false, x is 0 or negative. `-0` is the same with `0`, `0x80000000` is the same as its negation. Therefore, the expression evaluates to `false`
+
+F. x + y == uy + ux
+
+`true`
+Both values have the same bit vector, and their addition yields the same result.
+
+G. x * ~y + uy * ux == -x
+
+`true`
+`~y` equals `-y-1` and `ux * uy` equals `x * y`. Therefore, the equation can be rewritten as `x * (-y - 1) + x * y == `-xy -x + xy`, which simplifies to `-x`.  
