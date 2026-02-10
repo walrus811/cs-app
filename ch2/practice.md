@@ -622,3 +622,179 @@ G. x * ~y + uy * ux == -x
 
 `true`
 `~y` equals `-y-1` and `ux * uy` equals `x * y`. Therefore, the equation can be rewritten as `x * (-y - 1) + x * y == `-xy -x + xy`, which simplifies to `-x`.  
+
+### 2.45
+
+| Fractional value | Binary representation | Decimal representation |
+| :--------------: | :-------------------: | :--------------------: |
+|       1/8        |         0.001         |         0.125          |
+|       3/4        |        `0.11`         |         `0.75`         |
+|      25/16       |       `1.1001`        |        `1.5625`        |
+|     `43/16`      |        10.1011        |        `2.6875`        |
+|      `9/8`       |         1.001         |        `1.125`         |
+|      `47/8`      |       `101.111`       |         5.875          |
+|     `51/16`      |       `11.0011`       |         3.1875         |
+
+### 2.46
+
+A. 0.{[0]*23}1100[1100]
+B. 0.1's first 1 is 20 bits away from `0.1-x`'s first 1, so its value can be calculated with `2^-20 * 1/10`, which is around `9.54 * 10^-8`
+C. `9.54 * 10^-8 * 100 * 60 * 60 * 10 = 0.343 seconds`
+D. 0.343 * 2000 = 687m.
+
+1/16 + 1/32 = 0.09375
+1/256 + 1/512 = 0.004304339172
+1/4096 + 1/8192 = 0.0003662109375
+
+### 2.47
+
+V = (-1)^s * M * 2^E
+Bias = 1
+
+1. normalized
+
+E = e - Bias
+M = 1 + f
+
+2. denormalized
+
+E = 1 - Bias
+M = f
+
+|  Bits   |   e   |   E   |  2^E  |   f   |   M   | 2^E × M |   V   | Decimal |
+| :-----: | :---: | :---: | :---: | :---: | :---: | :-----: | :---: | :-----: |
+| 0 00 00 |  `0`  |  `0`  |  `1`  | `0/4` |  `0`  |  `0/4`  |  `0`  |   `0`   |
+| 0 00 01 |  `0`  |  `0`  |  `1`  | `1/4` | `1/4` |  `1/4`  | `1/4` | `0.25`  |
+| 0 00 10 |  `0`  |  `0`  |  `1`  | `2/4` | `2/4` |  `2/4`  | `1/2` |  `0.5`  |
+| 0 00 11 |  `0`  |  `0`  |  `1`  | `3/4` | `3/4` |  `3/4`  | `3/4` | `0.75`  |
+| 0 01 00 |  `1`  |  `0`  |  `1`  | `4/4` | `4/4` |  `4/4`  | `4/4` |   `1`   |
+| 0 01 01 |   1   |   0   |   1   |  1/4  |  5/4  |   5/4   |  5/4  |  1.25   |
+| 0 01 10 |  `1`  |  `0`  |  `1`  | `2/4` | `6/4` |  `6/4`  | `3/2` |  `1.5`  |
+| 0 01 11 |  `1`  |  `0`  |  `1`  | `3/4` | `7/4` |  `7/4`  | `7/4` | `1.75`  |
+| 0 10 00 |  `2`  |  `1`  |  `2`  | `0/4` | `4/4` |  `8/4`  |  `2`  |   `2`   |
+| 0 10 01 |  `2`  |  `1`  |  `2`  | `1/4` | `5/4` | `10/4`  | `5/2` |  `2.5`  |
+| 0 10 10 |  `2`  |  `1`  |  `2`  | `2/4` | `6/4` | `12/4`  |  `3`  |   `3`   |
+| 0 10 11 |  `2`  |  `1`  |  `2`  | `3/4` | `7/4` | `14/4`  | `7/2` |  `3.5`  |
+| 0 11 00 |  `-`  |  `-`  |  `-`  |  `-`  |  `-`  |   `-`   | `+∞`  |   `-`   |
+| 0 11 01 |  `-`  |  `-`  |  `-`  |  `-`  |  `-`  |   `-`   | `NaN` |   `-`   |
+| 0 11 10 |  `-`  |  `-`  |  `-`  |  `-`  |  `-`  |   `-`   | `NaN` |   `-`   |
+| 0 11 11 |  `-`  |  `-`  |  `-`  |  `-`  |  `-`  |   `-`   | `NaN` |   `-`   |
+
+### 2.48
+
+number: 3,510,593
+
+integer hex: 0x00359141
+single-precision floating-point hex: 0x4A564504
+
+
+Let's divide the binary vector of the floating-point value into sign, exp, frac as follows.
+
+[0][10010100][10101100100010100000100]
+
+Let's compare it with the binary vector of the integer value.
+
+i(integer): 00000000001[101011001000101000001]
+f(floating-point): 010010100[101011001000101000001]00
+
+The frac part of f is in i as shown above, except for an implied leading 1.
+
+### 2.49
+
+A. Significand determines  which numbers are representable. Since normalized values have an implied leading 1,  we can get a `2^(n+1)` positive exactly. Therfore, `2^(n+1) + 1` is the smallest positive integer that cannot be represented exactly.
+
+B. `16,777,217`
+
+### 2.50
+
+A. 10.010 -`10.0`, `2`
+
+B. 10.011 - `10.1`, `2.5`
+
+C. 10.110 - `11.0`, `3`
+
+D. 11.001 - `11.0`, `3`
+
+### 2.51
+
+A. By the rule of round-to-even, `x` is approximated as 0.00011001100110011001101. It's 0.10000002384185791 in decimal and larget than 0.1.
+
+B. `x′ - 0.1` is `0.0000000000000000000000[1100]`. It's the same with `2^-22 * 1/10`, which is around `2.38 * 10^-8`.
+
+C. `100 * 60 * 60 * 10 * 2.38 * 10^-8 = 0.086 seconds`.
+
+D. `2000 * 0.086 = 171m`
+
+### 2.52
+
+`V = M * 2^E`
+`k` is the length of exp.
+`n` is the length of frac.
+
+Format A
+
+`k = 3, Bias = 3, n = 4`
+
+Format B
+
+`k = 4, Bias = 7, n = 3`
+
+4.5/8
+
+7.5/8
+
+
+
+| Format A Bits |   E   |   M   |  Format A Value  | Format B Bits |   E   |   M   |  Format B Value  |
+| :-----------: | :---: | :---: | :--------------: | :-----------: | :---: | :---: | :--------------: |
+|   011 0000    |   0   |   1   |        1         |   0111 000    |   0   |   1   |        1         |
+|   101 1110    |   2   | 30/16 |   `15/2(7.5)`    |  `1001 111`   |   2   | 15/8  |   `15/2(7.5)`    |
+|   010 1001    |  -1   | 25/16 | `25/32(0.78125)` |  `0110 100`   |  -1   | 12/8  |   `3/4(0.75)`    |
+|   110 1111    |   3   | 31/16 |   `31/2(15.5)`   |  `1010 000`   |   3   | 16/8  |       `16`       |
+|   000 0001    |  -2   | 1/16  | `1/64(0.015625)` |  `0001 000`   |  -6   |  /8   | `1/64(0.015625)` |
+
+### 2.53
+
+```c
+#define POS_INFINITY 1e400
+#define NEG_INFINITY (-POS_INFINITY)
+#define NEG_ZERO (-1.0/POS_INFINITY)
+```
+
+### 2.54
+```c
+int x;
+float f; // not a special value
+double d; // not a special value
+```
+
+A. x == (int)(double) x
+`true`
+
+B. x == (int)(float) x
+`false`
+
+Values that have a binary representation longer than 24 bits will be rounded.
+One example is `2,147,483,647 (TMax_32)`.
+
+C. d == (double)(float) d
+`false`
+
+Double values cast to float can overflow or be rounded. `1e40` will be `POS_INFINITY`
+
+D. f == (float)(double) f
+`true`
+
+E. f == -(-f)
+`true`
+
+F. 1.0/2 == 1/2.0
+`true`
+
+G. d*d >= 0.0
+`true`
+
+H. (f + d) - f == d
+`false`
+
+If `f` is too larger than values can represent it frac
