@@ -59,4 +59,3 @@ int lower_one_mask(int n)
 {
   int w = sizeof(int) << 3;
   return (int)(~0u >> (w - n));
-}
