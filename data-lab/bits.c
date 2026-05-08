@@ -143,7 +143,7 @@ NOTES:
  */
 int bitXor(int x, int y)
 {
-  return ~(~(x & ~(x & y)) & ~(y & ~(x & y)));
+  return ~(~(x & ~y) & ~(~x & y));
 }
 /*
  * tmin - return minimum two's complement integer
@@ -173,7 +173,7 @@ int isTmax(int x)
  *   Examples allOddBits(0xFFFFFFFD) = 0, allOddBits(0xAAAAAAAA) = 1
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 12
- *   Rating: 2
+ *   Rating: 2a
  */
 int allOddBits(int x)
 {
@@ -264,7 +264,29 @@ int logicalNeg(int x)
  */
 int howManyBits(int x)
 {
-  return 0;
+  int negative = x >> 31;
+  x = (negative & ~x) | (~negative & x);
+
+  int b16, b8, b4, b2, b1, b0;
+
+  b16 = !!(x >> 16) << 4;
+  x = x >> b16;
+
+  b8 = !!(x >> 8) << 3;
+  x = x >> b8;
+
+  b4 = !!(x >> 4) << 2;
+  x = x >> b4;
+
+  b2 = !!(x >> 2) << 1;
+  x = x >> b2;
+
+  b1 = !!(x >> 1);
+  x = x >> b1;
+
+  b0 = x;
+
+  return b16 + b8 + b4 + b2 + b1 + b0 + 1;
 }
 // float
 /*
@@ -280,7 +302,23 @@ int howManyBits(int x)
  */
 unsigned floatScale2(unsigned uf)
 {
-  return 2;
+  unsigned s = (uf >> 31u) << 31;
+  unsigned exp = (uf >> 23) & 0xFF;
+  unsigned frac = (uf << 9) >> 9u;
+
+  if (!exp)
+  {
+    return s | (exp << 23) | (frac << 1);
+  }
+  else if (!(exp ^ 0xFF))
+  {
+    return uf;
+  }
+  else
+  {
+    exp = ((exp + 1) << 24) >> 1u;
+    return s | exp | frac;
+  }
 }
 /*
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -296,7 +334,36 @@ unsigned floatScale2(unsigned uf)
  */
 int floatFloat2Int(unsigned uf)
 {
-  return 2;
+  unsigned s = uf >> 31u;
+  unsigned exp = (uf >> 23) & 0xFF;
+  unsigned frac = (uf << 9) >> 9u;
+  int E = (int)exp - 127;
+
+  if (E < 0)
+    return 0;
+
+  if (E > 31)
+    return 0x80000000u;
+
+  unsigned M = (1 << 23) | frac;
+
+  if (E > 23)
+    M = M << (E - 23);
+  else
+    M = M >> (23 - E);
+
+  if (s)
+  {
+    if (M > 0x80000000u)
+      return 0x80000000u;
+    return -M;
+  }
+  else
+  {
+    if (M > 0x7FFFFFFF)
+      return 0x80000000u;
+    return M;
+  }
 }
 /*
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -313,5 +380,20 @@ int floatFloat2Int(unsigned uf)
  */
 unsigned floatPower2(int x)
 {
-  return 2;
+  if (x > 127)
+  {
+    return 0x7F800000;
+  }
+
+  if (x >= -126)
+  {
+    return (x + 127) << 23;
+  }
+
+  if (x >= -149)
+  {
+    return 1 << (x + 149);
+  }
+
+  return 0;
 }
